@@ -1,110 +1,157 @@
 #compdef launchctl
 # zsh completion for OSX's launchctl
 
-# notes
-# - bslist: seems to not honor given [PID | ..]
-# - stdout|stderr: sub-command no longer do anything
-# - singleuser: function not implemented
+function _launchctl() {
 
-local -a _launchctl_verbs
+  # notes
+  # - bslist: seems to not honor given [PID | ..]
+  # - stdout|stderr: sub-command no longer do anything
+  # - singleuser: function not implemented
 
-_launchctl_verbs=(
-'load:load configuration files and/or directories'
-'unload:unload configuration files and/or directories'
-'start:start specified job'
-'stop:stop specified job'
-'submit:submit a job from the command line'
-'remove:remove specified job'
-'bootstrap:bootstrap launchd'
-'list:list jobs and information about jobs'
-'setenv:set an environmental variable in launchd'
-'unsetenv:unset an environmental variable in launchd'
-'getenv:get an environmental variable from launchd'
-'export:export shell settings from launchd'
-'debug:set the waitfordebugger flag for the target job to true.'
-'limit:view and adjust launchd resource limits'
-'shutdown:prepare for system shutdown'
-'getrusage:get resource usage statistics from launchd'
-'log:adjust the logging level or mask of launchd'
-'umask:  change launchd`s umask'
-'bsexec:execute a process within a different mach bootstrap subset'
-'bslist:list mach bootstrap services and optional servers'
-'bstree:show the entire mach bootstrap tree. requires root privileges.'
-'managerpid:print the pid of the launchd managing this mach bootstrap.'
-'manageruid:print the uid of the launchd managing this mach bootstrap.'
-'managername:print the name of this mach bootstrap.'
-'asuser:execute a subcommand in the given user`s context.'
-'exit:exit the interactive invocation of launchctl'
-'quit:quit the interactive invocation of launchctl'
-'help:this help output'
-)
+  local -a _launchctl_verbs
 
-_arguments '*:: :->subcmds'
+  _launchctl_verbs=(
+  'bootstrap:Bootstraps a domain or a service into a domain.'
+  'bootout:Tears down a domain or removes a service from a domain.'
+  'enable:Enables an existing service.'
+  'disable:Disables an existing service.'
+  'kickstart:Forces an existing service to start.'
+  'attach:Attach the system'\''s debugger to a service.'
+  'debug:Configures the next invocation of a service for debugging.'
+  'kill:Sends a signal to the service instance.'
+  'blame:Prints the reason a service is running.'
+  'print:Prints a description of a domain or service.'
+  'print-cache:Prints information about the service cache.'
+  'print-disabled:Prints which services are disabled.'
+  'plist:Prints a property list embedded in a binary (targets the Info.plist by default).'
+  'procinfo:Prints port information about a process.'
+  'hostinfo:Prints port information about the host.'
+  'resolveport:Resolves a port name from a process to an endpoint in launchd.'
+  'limit:Reads or modifies launchd'\''s resource limits.'
+  'runstats:Prints performance statistics for a service.'
+  'examine:Runs the specified analysis tool against launchd in a non-reentrant manner.'
+  'config:Modifies persistent configuration parameters for launchd domains.'
+  'dumpstate:Dumps launchd state to stdout.'
+  'dumpjpcategory:Dumps the jetsam properties category for all services.'
+  'reboot:Initiates a system reboot of the specified type.'
+  'bootshell:Brings the system up from single-user mode with a console shell.'
+  'load:Bootstraps a service or directory of services.'
+  'unload:Unloads a service or directory of services.'
+  'remove:Unloads the specified service name.'
+  'list:Lists information about services.'
+  'start:Starts the specified service.'
+  'stop:Stops the specified service if it is running.'
+  'setenv:Sets the specified environment variables for all services within the domain.'
+  'unsetenv:Unsets the specified environment variables for all services within the domain.'
+  'getenv:Gets the value of an environment variable from within launchd.'
+  'bsexec:Execute a program in another process'\'' bootstrap context.'
+  'asuser:Execute a program in the bootstrap context of a given user.'
+  'submit:Submit a basic job from the command line.'
+  'managerpid:Prints the PID of the launchd controlling the session.'
+  'manageruid:Prints the UID of the current launchd session.'
+  'managername:Prints the name of the current launchd session.'
+  'error:Prints a description of an error.'
+  'variant:Prints the launchd variant.'
+  'version:Prints the launchd version.'
+  'help:Prints the usage for a given subcommand.'
+  )
 
-if (( CURRENT == 1 )); then
-	_describe -t commands "launchctl verbs" _launchctl_verbs
-fi
+  _arguments '*:: :->subcmds'
 
-_launchctl_jobs () { _arguments "*:jobs:(`launchctl list | awk '{print $3}'`)" }
+  if (( CURRENT == 1 )); then
+    _describe -t commands "launchctl verbs" _launchctl_verbs
+  fi
 
-_launchctl_exports () { _arguments "*:environmental variables:(`launchctl export | cut -d '=' -f1`)" }
+  case "$words[1]" in
+    bootstrap)
+      _arguments \
+        '-s[run as server (does not return)]' \
+        '-S+[session type]:session type'
+      ;;
+    #bootout)
+    #enable)
+    #disable)
+    #kickstart)
+    #attach)
+    debug) _arguments ':label' ':value';;
+    #kill)
+    #blame)
+    #print)
+    #print-cache)
+    #print-disabled)
+    #plist)
+    #procinfo)
+    #hostinfo)
+    #resolveport)
+    limit)
+      _arguments \
+        ':resources:(cpu filesize data stack core rss memlock maxproc maxfiles)' \
+        '*:limit [both|soft hard]'
+      ;;
+    #runstats)
+    #examine)
+    #config)
+    #dumpstate)
+    #dumpjpcategory)
+    #reboot)
+    #bootshell)
+    load)
+      _arguments \
+        '-w[override disabled key, sets it to false]' \
+        '-F[force loading of plist, ignores disabled key]' \
+        '-S+[session type (use with -D)]:session type:(Aqua Login-Window Background StandardIO System)' \
+        '-D+[look for *.plist files for given domain]:(system local network all)' \
+        '*:paths:_files'
+      ;;
+    unload)
+      _arguments \
+        '-w[override disabled key, sets it to false]' \
+        '-S+[session type (use with -D)]:session type:(Aqua Login-Window Background StandardIO System)' \
+        '-D+[look for *.plist files for given domain]:(system local network all)' \
+        '*:paths:_files'
+      ;;
+    remove) _arguments '*:jobs:__launchctl_jobs';;
+    list)
+      __launchctl_options() { _arguments '-x+[output as a XML property list]: :__launchctl_jobs' }
+      _alternative 'launchtl_options: :__launchctl_options' 'jobs: :__launchctl_jobs'
+      ;;
+    start) _arguments '*:jobs:__launchctl_jobs';;
+    stop) _arguments '*:jobs:__launchctl_jobs';;
+    setenv) _arguments '*: :__launchctl_exports';;
+    unsetenv) _arguments '*: :__launchctl_exports';;
+    getenv) _arguments '*: :__launchctl_exports';;
+    bsexec) _arguments '1:PID:' '2:command:' '*:args:';;
+    asuser) _arguments ':UID' ':command' '*:arguments';;
+    submit)
+      _arguments \
+        '-l+[unique label (required)]:label' \
+        '-p+[program to really execute]:program' \
+        '-o+[path to send stdout]:path to stdout:_files' \
+        '-e+[path to send stderr]:path to stderr:_files' \
+        '--+[command (args)]:command:_files' \
+        ':paths:_files'
+      ;;
+    #managerpid)
+    #manageruid)
+    #managername)
+    #error)
+    #variant)
+    #version)
+    #help)
 
-case "$words[1]" in
-	load)
-		_arguments \
-			'-w[override disabled key, sets it to false]' \
-			'-F[force loading of plist, ignores disabled key]' \
-			'-S+[session type (use with -D)]:session type:(Aqua Login-Window Background StandardIO System)' \
-			'-D+[look for *.plist files for given domain]:(system local network all)' \
-			'*:paths:_files'
-		;;
-	unload)
-		_arguments \
-			'-w[override disabled key, sets it to false]' \
-			'-S+[session type (use with -D)]:session type:(Aqua Login-Window Background StandardIO System)' \
-			'-D+[look for *.plist files for given domain]:(system local network all)' \
-			'*:paths:_files'
-		;;
-	start) _arguments '*:jobs:_launchctl_jobs';;
-	stop) _arguments '*:jobs:_launchctl_jobs';;
-	submit)
-		_arguments \
-			'-l+[unique label (required)]:label' \
-			'-p+[program to really execute]:program' \
-			'-o+[path to send stdout]:path to stdout:_files' \
-			'-e+[path to send stderr]:path to stderr:_files' \
-			'--+[command (args)]:command:_files' \
-			':paths:_files'
-		;;
-	remove) _arguments '*:jobs:_launchctl_jobs';;
-	bootstrap)
-		_arguments \
-			'-s[run as server (does not return)]' \
-			'-S+[session type]:session type'
-		;;
-	list)
-		_launchctl_options () { _arguments '-x+[output as a XML property list]: :_launchctl_jobs' }
-		_alternative 'launchtl_options: :_launchctl_options' 'jobs: :_launchctl_jobs'
-		;;
-	setenv) _arguments '*: :_launchctl_exports';;
-	unsetenv) _arguments '*: :_launchctl_exports';;
-	getenv) _arguments '*: :_launchctl_exports';;
-	debug) _arguments ':label' ':value';;
-	limit)
-		_arguments \
-			':resources:(cpu filesize data stack core rss memlock maxproc maxfiles)' \
-			'*:limit [both|soft hard]'
-		;;
-	getrusage) _arguments '1:target:(self children)';;
-	log)
-		_launchctl_log_levels () { _arguments "*:log levels:(`launchctl log`)" }
-		_arguments \
-			':options:(level only mask)' \
-			'*:level:_launchctl_log_levels'
-		;;
-	umask) _arguments ':newmask:';;
-	bsexec) _arguments '1:PID:' '2:command:' '*:args:';;
-	bslist) _arguments '-j[show registering job]::';;
-	bstree) _arguments '-j[show registering job]::';;
-	asuser) _arguments ':UID' ':command' '*:arguments';;
-esac
+    # DEPREATED verbs:
+    getrusage) _arguments '1:target:(self children)';;
+    log)
+      __launchctl_log_levels() { _arguments "*:log levels:(`launchctl log`)" }
+      _arguments \
+        ':options:(level only mask)' \
+        '*:level:__launchctl_log_levels'
+      ;;
+    umask) _arguments ':newmask:';;
+    bslist) _arguments '-j[show registering job]::';;
+    bstree) _arguments '-j[show registering job]::';;
+  esac
+}
+
+__launchctl_jobs()    { _arguments "*:jobs:(`launchctl list | awk '{print $3}'`)" }
+__launchctl_exports() { _arguments "*:environmental variables:(`launchctl export | cut -d '=' -f1`)" }
